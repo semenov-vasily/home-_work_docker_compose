@@ -1,0 +1,7 @@
+/venv
+/.idea
+/main/__pycache__
+/phones/__pycache__
+db.json
+README.md
+db.json
