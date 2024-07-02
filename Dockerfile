@@ -12,7 +12,7 @@ COPY ./phones/ /src/phones/
 
 
 
-EXPOSE 7000
+EXPOSE 7008
 
 WORKDIR src
 

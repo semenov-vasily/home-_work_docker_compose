@@ -1,14 +1,10 @@
 version: "3.8"
-
 networks:
   backend:
-
 volumes:
   pgdata:
-
-
 services:
-  db:
+  postgresql:
     image: postgres:latest
     environment:
       POSTGRES_DB: netology_import_phones
@@ -16,17 +12,25 @@ services:
       POSTGRES_PASSWORD: postgres
     networks:
       - backend
-
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
-
+#      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+#      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+     test: ["CMD-SHELL", "pg_isready -U postgres -d netology_import_phones"]
+     interval: 1m30s
+     timeout: 30s
+     retries: 5
+     start_period: 30s
   web:
      build: .
-     command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py loaddata data.json && gunicorn main.wsgi:application --bind 0.0.0.0:7000"
      ports:
-        - "7000:7000"
+        - "7008:7008"
      networks:
        - backend
      depends_on:
-       - db
+       - postgresql
+     command:
+      sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py loaddata data.json && python manage.py runserver 0.0.0.0:7008"
+      # && python manage.py runserver 0.0.0.0:7005"
+      # && gunicorn main.wsgi:application --bind 0.0.0.0:7005"
