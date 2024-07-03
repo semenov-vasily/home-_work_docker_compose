@@ -6,16 +6,19 @@ volumes:
 services:
   postgresql:
     image: postgres:latest
-    environment:
-      POSTGRES_DB: netology_import_phones
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+    env_file:
+      - ./.env
+#    environment:
+#      POSTGRES_DB: netology_import_phones
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: postgres
     networks:
       - backend
     volumes:
       - pgdata:/var/lib/postgresql/data
 #      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 #      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+#      - .:/docker-entrypoint-initdb.d
     healthcheck:
      test: ["CMD-SHELL", "pg_isready -U postgres -d netology_import_phones"]
      interval: 1m30s
@@ -24,13 +27,31 @@ services:
      start_period: 30s
   web:
      build: .
-     ports:
-        - "7008:7008"
+#     ports:
+#        - "7015:7015"
+     expose:
+       - 7020
      networks:
        - backend
      depends_on:
        - postgresql
      command:
-      sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py loaddata data.json && python manage.py runserver 0.0.0.0:7008"
-      # && python manage.py runserver 0.0.0.0:7005"
-      # && gunicorn main.wsgi:application --bind 0.0.0.0:7005"
+       sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py loaddata data.json && 
+       gunicorn main.wsgi:application --bind 0.0.0.0:7020"
+      # && python manage.py runserver 0.0.0.0:7010"
+      # && gunicorn main.wsgi:application --bind 0.0.0.0:7010"
+  nginx:
+#    image: nginx:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    depends_on:
+      - web
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./static:/app/static
+      - ./media:/app/media
+    networks:
+      - backend
+    ports:
+      - "80:80"

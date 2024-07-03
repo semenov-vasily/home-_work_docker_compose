@@ -1,1 +1,0 @@
-CREATE DATABASE netology_import_phones;
